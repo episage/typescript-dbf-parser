@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "chai": "registry:npm/chai#3.5.0+20160415060238"
+  },
+  "globalDependencies": {
+    "iconv-lite": "github:Microsoft/vscode/src/typings/iconv-lite.d.ts#609d845cde54560431cfe9714f323df30f7078b7",
+    "mocha": "registry:dt/mocha#2.2.5+20160317120654",
+    "node": "registry:dt/node#6.0.0+20160524002506"
+  }
+}

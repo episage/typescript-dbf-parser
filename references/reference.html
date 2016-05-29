@@ -1,0 +1,730 @@
+<html>
+	
+<!-- Taken from http://www.clicketyclick.dk/databases/xbase/format/dbf.html#DBF_NOTE_1_TARGET -->
+<head>
+	<title>Xbase Data file (*.dbf)</title>
+
+	<link rel=stylesheet href="xbase.css" type="text/css">
+	<link rel=stylesheet href="debug.css" type="text/css">
+	<script language="JavaScript1.2" src="snippets.js"></script>
+	<link rel="shortcut icon" href="click.ico">
+
+	<script>
+		previous( "data_types.html", "Data types" );
+		next( "dbf_check.html", "What to check on a dbf");
+	</script>
+</head>
+
+<body  onLoad="var tip = new ToolTip();">
+<A NAME="DBF_STRUCT"></A>
+<script>
+	link_header();
+	bread_crums( document.URL );
+</script><hr/>
+<!-- -------------------------------------------------------------- -->
+<h2><script>document.write( document.title )</script></h2>
+
+The data file with suffix DBF is the central table in an Xbase database.
+All other data files are related to this one file.
+<br>
+
+The Data File is a mix of binary and ASCII data. Header contains binary
+data. The records are all in ASCII (except ofcause the binary objects
+like pictures).
+<p>
+<img src="images/chock.png" align="left">
+
+Several sources claim that dBASE clears the header on creation with
+blanks (20h). But I've seen data in the reserved areas.
+
+<br clear="both">
+
+Some documents states that deleted records are overwritten by new valid
+records. My experience is that new records are <b>appended</b> to the
+data file - not inserted.
+<br>
+A deleted record can only be deleted physically using the PACK command.
+Even after PACK the deleted record exists after the EOF mark. The file
+is not truncated in dBASE III (But don't count on it ;-)
+
+<p>
+<img src="images/destructive.png" align="left">
+Note that this structure is valid for Xbase - and dBASE v. III - 5. Later
+versions of dBASE has a different layout, like dBASE 7
+(see <a href="http://www.dbase.com/KnowledgeBase/int/db7_file_fmt.htm">http://www.dbase.com/KnowledgeBase/int/db7_file_fmt.htm</a>
+<br clear="both">
+<PRE>
+<a name="DBF_NOTE_1_SOURCE"></a>
+
+          _______________________  _______
+00h /   0| Version number      <a href="#DBF_NOTE_1_TARGET">*1</a>|  ^
+         |-----------------------|  |
+01h /   1| Date of last update   |  |
+02h /   2|      YYMMDD        <a name="DBF_NOTE_21_SOURCE"><a href="#DBF_NOTE_21_TARGET">*21</a>|  |
+03h /   3|                    <a name="DBF_NOTE_14_SOURCE"><a href="#DBF_NOTE_14_TARGET">*14</a>|  |
+         |-----------------------|  |
+04h /   4| Number of records     | Record
+05h /   5| in data file          | header
+06h /   6| ( 32 bits )        <a name="DBF_NOTE_14_SOURCE"><a href="#DBF_NOTE_14_TARGET">*14</a>|  |
+07h /   7|                       |  |
+         |-----------------------|  |
+08h /   8| Length of header   <a name="DBF_NOTE_14_SOURCE"><a href="#DBF_NOTE_14_TARGET">*14</a>|  |
+09h /   9| structure ( 16 bits ) |  |
+         |-----------------------|  |
+0Ah /  10| Length of each record |  |
+0Bh /  11| ( 16 bits )     <a name="DBF_NOTE_2_SOURCE"><a href="#DBF_NOTE_2_TARGET">*2</a> <a name="DBF_NOTE_14_SOURCE"><a href="#DBF_NOTE_14_TARGET">*14</a>|  |
+         |-----------------------|  |
+0Ch /  12| ( Reserved )        <a name="DBF_NOTE_3_SOURCE"><a href="#DBF_NOTE_3_TARGET">*3</a>|  |
+0Dh /  13|                       |  |
+         |-----------------------|  |
+0Eh /  14| Incomplete transac.<a name="DBF_NOTE_12_SOURCE"><a href="#DBF_NOTE_12_TARGET">*12</a>|  |
+         |-----------------------|  |
+0Fh /  15| Encryption flag    <a name="DBF_NOTE_13_SOURCE"><a href="#DBF_NOTE_13_TARGET">*13</a>|  |
+         |-----------------------|  |
+10h /  16| Free record thread    |  |
+11h /  17| (reserved for LAN     |  |
+12h /  18|  only )               |  |
+13h /  19|                       |  |
+         |-----------------------|  |
+14h /  20| ( Reserved for        |  |            _        |=======================| ______
+         |   multi-user dBASE )  |  |           / 00h /  0| Field name in ASCII   |  ^
+         : ( dBASE III+ - )      :  |          /          : (terminated by 00h)   :  |
+         :                       :  |         |           |                       |  |
+1Bh /  27|                       |  |         |   0Ah / 10|                       |  |
+         |-----------------------|  |         |           |-----------------------| For
+1Ch /  28| MDX flag (dBASE IV)<a name="DBF_NOTE_14_SOURCE"><a href="#DBF_NOTE_14_TARGET">*14</a>|  |         |   0Bh / 11| Field type (ASCII) <a name="DBF_NOTE_20_SOURCE"><a href="#DBF_NOTE_20_TARGET">*20</a>| each
+         |-----------------------|  |         |           |-----------------------| field
+1Dh /  29| Language driver     <a name="DBF_NOTE_5_SOURCE"><a href="#DBF_NOTE_5_TARGET">*5</a>|  |        /    0Ch / 12| Field data address    |  |
+         |-----------------------|  |       /             |                     <a name="DBF_NOTE_6_SOURCE"><a href="#DBF_NOTE_6_TARGET">*6</a>|  |
+1Eh /  30| ( Reserved )          |  |      /              | (in memory !!!)       |  |
+1Fh /  31|                     <a name="DBF_NOTE_3_SOURCE"><a href="#DBF_NOTE_3_TARGET">*3</a>|  |     /       0Fh / 15| (dBASE III+)          |  |
+         |=======================|__|____/                |-----------------------|  | &lt;-
+20h /  32|                       |  |  ^          10h / 16| Field length       <a name="DBF_NOTE_22_SOURCE"><a href="#DBF_NOTE_22_TARGET">*22</a>|  |   |
+         |- - - - - - - - - - - -|  |  |                  |-----------------------|  |   | *7
+         |                    <a name="DBF_NOTE_19_SOURCE"><a href="#DBF_NOTE_19_TARGET">*19</a>|  |  |          11h / 17| Decimal count      <a name="DBF_NOTE_23_SOURCE"><a href="#DBF_NOTE_23_TARGET">*23</a>|  |   |
+         |- - - - - - - - - - - -|  |  Field              |-----------------------|  | &lt;-
+         |                       |  | Descriptor  12h / 18| ( Reserved for        |  |
+         :. . . . . . . . . . . .:  |  |array     13h / 19|   multi-user dBASE)<a name="DBF_NOTE_18_SOURCE"><a href="#DBF_NOTE_18_TARGET">*18</a>|  |
+         :                       :  |  |                  |-----------------------|  |
+      n  |                       |__|__v_         14h / 20| Work area ID       <a name="DBF_NOTE_16_SOURCE"><a href="#DBF_NOTE_16_TARGET">*16</a>|  |
+         |-----------------------|  |    \                |-----------------------|  |
+      n+1| Terminator (0Dh)      |  |     \       15h / 21| ( Reserved for        |  |
+         |=======================|  |      \      16h / 22|   multi-user dBASE )  |  |
+      m  | Database Container    |  |       \             |-----------------------|  |
+         :                    <a name="DBF_NOTE_15_SOURCE"><a href="#DBF_NOTE_15_TARGET">*15</a>:  |        \    17h / 23| Flag for SET FIELDS   |  |
+         :                       :  |         |           |-----------------------|  |
+    / m+263                      |  |         |   18h / 24| ( Reserved )          |  |
+         |=======================|__v_ ___    |           :                       :  |
+         :                       :    ^       |           :                       :  |
+         :                       :    |       |           :                       :  |
+         :                       :    |       |   1Eh / 30|                       |  |
+         | Record structure      |    |       |           |-----------------------|  |
+         |                       |    |        \  1Fh / 31| Index field flag    <a name="DBF_NOTE_8_SOURCE"><a href="#DBF_NOTE_8_TARGET">*8</a>|  |
+         |                       |    |         \_        |=======================| _v_____
+         |                       | Records
+         |-----------------------|    |
+         |                       |    |          _        |=======================| _______
+         |                       |    |         / 00h /  0| Record deleted flag <a name="DBF_NOTE_9_SOURCE"><a href="#DBF_NOTE_9_TARGET">*9</a>|  ^
+         |                       |    |        /          |-----------------------|  |
+         |                       |    |       /           | Data               <a name="DBF_NOTE_10_SOURCE"><a href="#DBF_NOTE_10_TARGET">*10</a>|  One
+         |                       |    |      /            : (ASCII)            <a name="DBF_NOTE_17_SOURCE"><a href="#DBF_NOTE_17_TARGET">*17</a>: record
+         |                       |____|_____/             |                       |  |
+         :                       :    |                   |                       | _v_____
+         :                       :____|_____              |=======================|
+         :                       :    |
+         |                       |    |
+         |                       |    |
+         |                       |    |
+         |                       |    |
+         |                       |    |
+         |=======================|    |
+         |__End_of_File__________| ___v____  End of file ( 1Ah )  <a name="DBF_NOTE_11_SOURCE"><a href="#DBF_NOTE_11_TARGET">*11</a>
+</PRE>
+
+<!-- NOTES -------------------------------------------------------- -->
+<ol>
+<!-- 1 --><a name="DBF_NOTE_1_TARGET"></a>
+<a href="#DBF_NOTE_1_SOURCE"><LI> Also called signature.</a>
+
+<table>
+<tr>
+<td valign=top>
+
+	<table border=1>
+	<tr>
+		<th>Value</th>
+		<th>Bit mask</th>
+		<th>Description</th>
+	</tr>
+	<tr>
+		<td>02h</td>
+		<td>00000010</td>
+		<td>FoxBase</td>
+	</tr>
+	<tr>
+		<td>03h</td>
+		<td>00000011</td>
+		<td>File without DBT</td>
+	</tr>
+
+	<tr>
+
+		<td>04h</td>
+		<td>00000100</td>
+		<td>dBASE IV w/o memo file</td>
+	</tr>
+	<tr>
+		<td>05h</td>
+		<td>00000101</td>
+		<td>dBASE V w/o memo file</td>
+	</tr>
+	<tr>
+		<td>07h</td>
+		<td>00000111</td>
+		<td>VISUAL OBJECTS (first 1.0 versions) for the Dbase III files w/o memo file</td>
+	</tr>
+
+	<tr>
+		<td>30h</td>
+		<td>00110000</td>
+		<td>Visual FoxPro</td>
+	</tr>
+	<tr>
+		<td>30h</DT>
+		<td>00110000</td>
+		<td>Visual FoxPro w. DBC</td>
+	</tr>
+
+	<tr>
+		<td>31h</DT>
+		<td>00110001</td>
+		<td>Visual FoxPro w. AutoIncrement field</td>
+	</tr>
+
+	<tr>
+		<td>43h</DT>
+		<td>01000011</td>
+		<td>.dbv memo var size (Flagship)</td>
+	</tr>
+
+	<tr>
+		<td>7Bh</DT>
+		<td>01111011</td>
+		<td>dBASE IV with memo</td>
+	</tr>
+
+	<tr>
+		<td>83h</td>
+		<td>10000011</td>
+		<td>File with DBT</td>
+	</tr>
+	<tr>
+		<td>83h</td>
+		<td>10000011</td>
+		<td>dBASE III+ with memo file</td>
+	</tr>
+
+	<tr>
+		<td>87h</td>
+		<td>10000111</td>
+		<td>VISUAL OBJECTS (first 1.0 versions) for the Dbase III files (NTX clipper driver) with memo file</td>
+	</tr>
+
+	<tr>
+		<td>8Bh</DT>
+		<td>10001011</td>
+		<td>dBASE IV w. memo</td>
+	</tr>
+	<tr>
+		<td>8Eh</DT>
+		<td>10001110</td>
+		<td>dBASE IV w. SQL table</td>
+	</tr>
+	<tr>
+		<td>B3h</DT>
+		<td>10110011</td>
+		<td>.dbv and .dbt memo (Flagship)</td>
+	</tr>
+	<tr>
+		<td>E5h</DT>
+		<td>11100101</td>
+		<td>Clipper SIX driver w. SMT memo file.<p>
+		<b>Note!</b> Clipper SIX driver sets lowest 3 bytes to 110 in descriptor of crypted databases. So, 3->6, 83h->86h, F5->F6, E5->E6 etc.</td>
+	</tr>
+
+	<tr>
+		<td>F5h</DT>
+		<td>11110101</td>
+		<td>FoxPro w. memo file</td>
+	</tr>
+
+	<tr>
+		<td>FBh</DT>
+		<td>11111011</td>
+		<td>FoxPro ???</td>
+	</tr>
+
+	</table>
+</td>
+
+<td valign=top>
+	dBASE IV bit flags:
+
+	<table border=1>
+	<tr>
+		<th>Bit</th>
+		<th>Description</th>
+	</tr>
+	<tr>
+		<td>0-2</td>
+		<td>Version no. i.e. 0-7</td>
+	</tr>
+	<tr>
+		<td>3</DT>
+		<td>Presence of memo file</td>
+	</tr>
+	<tr>
+		<td>4-6</td>
+		<td>Presence of SQL table</td>
+	</tr>
+	<tr>
+		<td>7</td>
+		<td>DBT flag</td>
+	</tr>
+	</table>
+
+</td>
+
+</tr>
+
+<!-- -------------------------------------------------------------- -->
+
+<tr>
+	<td>
+	<pre>MSSSFVVV</pre>
+	<table border=1>
+	<tr>
+		<td>
+			M
+		</td>
+		<td>
+			dBASE III memo file
+		</td>
+	</tr>
+
+	<tr>
+		<td>
+			S
+		</td>
+		<td>
+			SQL mask
+		</td>
+	</tr>
+
+	<tr>
+		<td>
+			F
+		</td>
+		<td>
+			Memo field flag
+		</td>
+	</tr>
+
+	<tr>
+		<td>
+			V
+		</td>
+		<td>
+			Version
+		</td>
+	</tr>
+	</table>
+
+
+	</td>
+
+</tr>
+
+</table>
+
+
+
+
+</li>
+
+<!-- 2 --><a name="DBF_NOTE_2_TARGET"></a>
+<a href="#DBF_NOTE_2_SOURCE"><li>Sum of lengths of all fields</a> + 1 (deletion flag)</li>
+
+
+<!-- 3 --><a name="DBF_NOTE_3_TARGET"></a>
+<a href="#DBF_NOTE_3_SOURCE"><li>Filled with 00h</a>. (dBASE IV) </li>
+
+
+<!-- 4 --><a name="DBF_NOTE_4_TARGET"></a>
+<a href="#DBF_NOTE_4_SOURCE"><li>Production index / Multiple index file</a>
+
+<table>
+<tr>
+<td valign=top>
+
+	(dBASE IV)
+
+	<table border=2>
+	<tr>
+		<th>Value</th>
+		<th>Description</th>
+	</tr>
+	<tr>
+		<td>01h</td>
+		<td>MDX file present</td>
+	</tr>
+	<tr>
+		<td>00h</td>
+		<td>no MDX file (index upon demand).</td>
+	</tr>
+	</table>
+</td>
+
+<td valign=top>
+
+	(FoxBase)
+
+	<table border=1>
+	<tr>
+		<th>Value</th>
+		<th>Description</th>
+	</tr>
+	<tr>
+		<td>01h</td>
+		<td>CDX compound index file present,</td>
+	</tr>
+	<tr>
+		<td>00h</td>
+		<td>no CDX file.</td>
+	</tr>
+	<tr>
+
+	</table>
+</td>
+<td valign=top>
+
+	(Visual FoxPro)
+
+	<table border=1>
+	<tr>
+		<th>Value</th>
+		<th>Description</th>
+	</tr>
+	<tr>
+		<td>02h</td>
+		<td>With memo</td>
+	</tr>
+	<tr>
+		<td>04h</td>
+		<td>Database Container (DBC)</td>
+	</tr>
+	<tr>
+		<td>07h</td>
+		<td>DBC (incl. memo &amp; indexes)</DD>
+	</tr>
+	</table>
+</td>
+</tr>
+</table>
+</li>
+
+
+
+<!-- 5 --><a name="DBF_NOTE_5_TARGET"></a>
+<a href="#DBF_NOTE_5_SOURCE"><li>(Foxpro) Code page</a>:
+
+These values follow the DOS / Windows Code Page values.
+
+<table border=1>
+
+<tr>
+	<th>Value</th>
+	<th>Description</th>
+	<th>Code page</th>
+</tr>
+
+<tr><td>01h</td>	<td>DOS USA</td><td>code page 437</td></tr>
+<tr><td>02h</td>	<td>DOS Multilingual</td><td>code page 850</td></tr>
+<tr><td>03h</td>	<td>Windows ANSI</td><td>code page 1252</td></tr>
+<tr><td>04h</td>	<td>Standard Macintosh</td></tr>
+<tr><td>64h</td>	<td>EE MS-DOS</td><td>code page 852</td></tr>
+<tr><td>65h</td>	<td>Nordic MS-DOS</td><td>code page 865</td></tr>
+<tr><td>66h</td>	<td>Russian MS-DOS</td><td>code page 866</td></tr>
+<tr><td>67h</td>	<td>Icelandic MS-DOS</td></tr>
+<tr><td>68h</td>	<td>Kamenicky (Czech) MS-DOS</td></tr>
+<tr><td>69h</td>	<td>Mazovia (Polish) MS-DOS</td></tr>
+<tr><td>6Ah</td>	<td>Greek MS-DOS (437G)</td></tr>
+<tr><td>6Bh</td>	<td>Turkish MS-DOS</td></tr>
+<tr><td>96h</td>	<td>Russian Macintosh</td></tr>
+<tr><td>97h</td>	<td>Eastern European Macintosh</td></tr>
+<tr><td>98h</td>	<td>Greek Macintosh</td></tr>
+<tr><td>C8h</td>	<td>Windows EE</td><td>code page 1250</td></tr>
+<tr><td>C9h</td>	<td>Russian Windows</td></tr>
+<tr><td>CAh</td>	<td>Turkish Windows</td></tr>
+<tr><td>CBh</td>	<td>Greek Windows</td></tr>
+
+</table>
+</li>
+
+
+
+<!-- 6 --><a name="DBF_NOTE_6_TARGET"></a>
+<a href="#DBF_NOTE_6_SOURCE"><li>Field data address</a>
+
+<dir>
+<img src="images/chock.png" align="left"> Note that this field has two very different
+interpretations.
+</dir>
+<br clear="both">
+
+<table border=1>
+<tr>
+	<th>
+		 Version
+	</th>
+	<th>
+		Offset
+	</th>
+	<th>
+
+		Description
+	</th>
+</tr>
+
+
+<tr>
+	<td>
+		 dBASE
+	</td>
+	<td>
+		12-15
+	</td>
+	<td>
+
+		Address in memory.
+	</td>
+</tr>
+<tr>
+	<td>
+		 FoxPro
+	</td>
+	<td>
+		12-13
+	</td>
+	<td>
+		Offset of field from beginning of record.
+	</td>
+</tr>
+</table>
+
+
+<BR>The field addresss is irellevant for other applications.</li>
+
+
+<!-- 7 --><a name="DBF_NOTE_7_TARGET"></a>
+<a href="#DBF_NOTE_7_SOURCE"><li>Field length for non-numerical fields</a>. (FoxPro, Clipper)
+<BR>
+Byte 16 is normally field length (0-255) and byte 17 represents the high byte for field length (256-65535).
+</li>
+
+
+<!-- 8 --><a name="DBF_NOTE_8_TARGET"></a>
+<a href="#DBF_NOTE_8_SOURCE"><li>Index field flag</a> (dBASE IV):
+
+<table border=1>
+<tr>
+	<th>Value</th>
+	<th>Description</th>
+</tr>
+<tr>
+	<td>00h</td>
+	<td>No key for this field (ignored)</td>
+</tr>
+<tr>
+	<td>01h</td>
+	<td>Key exists for this field (in MDX)</tr>
+</tr>
+</table>
+</li>
+
+
+<!-- 9 --><a name="DBF_NOTE_9_TARGET"></a>
+<a href="#DBF_NOTE_9_SOURCE"><li>Deleted flag</a>:
+
+<table border=1>
+<tr>
+	<th>Value</th>
+	<th>Description</th>
+</tr>
+<tr>
+	<td>2Ah (*)</td>
+	<td>Record is deleted</td>
+</tr>
+<tr>
+	<td>20h (blank)</td>
+	<td>Record is valid</DD>
+</tr>
+</table>
+</li>
+
+
+
+<!-- 10 --><a name="DBF_NOTE_10_TARGET"></a>
+<a href="#DBF_NOTE_10_SOURCE"><li>There are no field separators for record terminators</a>.</li>
+
+
+<!-- 11 --><a name="DBF_NOTE_11_TARGET"></a>
+<a href="#DBF_NOTE_11_SOURCE"><li>End-of-file</a>
+<br>dBASE II regards any End-of-File 1Ah value as the end of the file. dBASE
+III regard an End-of-File as an ordinary character, however it appends
+an extra End-of-File character at the physical end of the file.
+
+<BR>If the file is packed the physical size of the file may be larger than
+the logical i.e. there may be garbage after the EOF mark.
+</li>
+
+
+
+<!-- 12 --><a name="DBF_NOTE_12_TARGET"></a>
+<a href="#DBF_NOTE_12_SOURCE"><li>(dBASE IV) Incomplete transaction</a>:
+
+<table border=1>
+<tr>
+	<th>Value</th>
+	<th>Description</th>
+</tr>
+<tr>
+	<td>00h</td>
+	<td>Transaction ended (or rolled back)</td>
+</tr>
+<tr>
+	<td>01h</td>
+	<td>Transaction started</td>
+</tr>
+</table>
+
+</li>
+
+
+
+<!-- 13 --><a name="DBF_NOTE_13_TARGET"></a>
+<a href="#DBF_NOTE_13_SOURCE"><li>Encryption flag</a> (dBASE IV):
+
+<dir>
+<img src="images/destructive.png" align="left">Be very careful NOT to
+modify this flag!<br> This is the only indication that the content is
+enctrypted.
+
+</dir>
+
+<br clear="both">
+<table border=1>
+<tr>
+	<th>Value</th>
+	<th>Description</th>
+</tr>
+<tr>
+	<td>00h</td>
+	<td>Not encrypted
+</tr>
+<tr>
+	<td>01h</td>
+	<td>Data encrypted</td>
+</tr>
+</table>
+</li>
+
+
+
+<!-- 14 --><a name="DBF_NOTE_14_TARGET"></a>
+<a href="#DBF_NOTE_14_SOURCE"><li>Stored at binary</a> (Little endian).
+Unsigned.
+</li>
+
+
+
+<!-- 15 --><a name="DBF_NOTE_15_TARGET"></a>
+<a href="#DBF_NOTE_15_SOURCE"><li>Database Container</a> (DBC) 263 bytes for backlist. (Visual FoxPro)
+
+<br>
+ Included in header structure.</li>
+
+
+
+<!-- 16 --><a name="DBF_NOTE_16_TARGET"></a>
+<a href="#DBF_NOTE_16_SOURCE"><li>Work area ID</a> is 01h in all dBASE III files</li>
+
+
+<!-- 17 --><a name="DBF_NOTE_17_TARGET"></a>
+<a href="#DBF_NOTE_17_SOURCE"><li>An empty memo field</a> has a reference filled with 10 blanks.</li>
+
+<!-- 18 --><a name="DBF_NOTE_18_TARGET"></a>
+<a href="#DBF_NOTE_18_SOURCE"><li>Field Flags</a> (FoxPro/FoxBase):
+
+<table border=1>
+<tr>
+	<th>Value</th>
+	<th>Description</th>
+</tr>
+<tr>
+	<td>01h</td>
+	<td>System column (not visible to user)</td>
+</tr>
+<tr>
+	<td>02h</td>
+	<td>Column can store null values</td>
+</tr>
+<tr>
+	<td>04h</td>
+	<td>Binary column (for CHAR and MEMO only)</td>
+</tr>
+</table>
+</li>
+
+
+<!-- 19 --><a name="DBF_NOTE_19_TARGET"></a>
+<a href="#DBF_NOTE_19_SOURCE"><li>Max 128 fields</a>
+
+
+<!-- 20 --><a name="DBF_NOTE_20_TARGET"></a>
+<a href="#DBF_NOTE_20_SOURCE"><li>??</a>
+See <a href="data_types.html">Data types</a>
+
+
+<!-- 21 --><a name="DBF_NOTE_21_TARGET"></a>
+<a href="#DBF_NOTE_21_SOURCE"><li>Date</a> in header is without century
+YYMMDD and date in records are with century YYYYMMDD. Valid interval is
+00h - FFh. Add base year 1900 and you'll have the interval 1900 - 2155.
+
+
+
+<!-- 22 --><a name="DBF_NOTE_22_TARGET"></a>
+<a href="#DBF_NOTE_22_SOURCE"><li>Field length</a>
+Max = 255. Valid types (See <a href="data_types.html">Data
+types</a></li>
+
+
+<!-- 23 --><a name="DBF_NOTE_23_TARGET"></a>
+<a href="#DBF_NOTE_23_SOURCE"><li>Decimal count</a>
+Numeric &lt;= 15
+
+
+</ol>
+
+
+<!-- -------------------------------------------------------------- -->
+<br clear=both>
+<script>
+	link_footer();
+	write_footer() ;
+</script>
+
+
+</body><!-- <<< dbf.html <<< -->
+</html>
+
