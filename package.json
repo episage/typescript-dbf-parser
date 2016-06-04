@@ -16,6 +16,7 @@
   "author": "Tom Boy",
   "license": "ISC",
   "dependencies": {
+    "bluebird": "^3.4.0",
     "iconv-lite": "^0.4.13"
   },
   "devDependencies": {

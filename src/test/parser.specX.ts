@@ -15,11 +15,14 @@ describe('parser', () => {
             let rs = fs.createReadStream(filePath);
             let parser = new Parser(rs, '852');
 
+            let c = 0;
             parser.parse((header) => {
                 console.log(header);
             }, (columns) => {
                 console.log(columns);
             }, (record) => {
+                process.stdout.write(c.toString() + "\r");
+                c++;
                 // console.log(record);
             }, (error) => {
                 console.log(error);

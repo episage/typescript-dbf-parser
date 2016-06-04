@@ -1,6 +1,8 @@
 import * as Models from './Models';
 import {BufferReader} from './BufferReader';
 
+
+import * as BB from 'bluebird';
 import * as fs from 'fs';
 
 export class DbtReader {
@@ -10,26 +12,35 @@ export class DbtReader {
 
     private async readMemoFileHeader() {
         try {
-            let buffer: Buffer = Buffer.alloc(512, 0, 'binary');
+            console.log("BUFF ALLOC");
 
-            await fs.read(
+            let buffer: Buffer = Buffer.alloc(512, 0, 'binary');
+            console.log("RA");
+            console.log(buffer);
+            // let readAsync = Promise.promisify(fs.read);
+            
+            
+            fs.read(
                 this.memoFileDescriptior,
                 buffer,
                 0,
                 512,
-                0);
-
-            return buffer;
-
+                0, (err, br, b) => {
+                    console.log(buffer);
+                    return buffer;
+                });
+            console.log('enddd')
         } catch (error) {
-            throw error;
+            throw new Error(error);
         }
     }
 
     public async parseHeader() {
+        console.log("AH");
         try {
+            console.log("PH");
             let buffer = await this.readMemoFileHeader();
-
+            console.log("PHE");
             var reader = new BufferReader(buffer, 0);
 
             let nextAvailBlockNumber = reader.read32bitUInt();
